@@ -15,10 +15,10 @@ class Day01Test
 {
     @ParameterizedTest
     @CsvSource({
-            "01-control.txt, false, 142",
-            "01-data.txt, false, 57346",
-//            "01-control.txt, true, 1924",
-//            "01-data.txt, true, 9020",
+            "01-control.txt, true, 142",
+            "01-data.txt, true, 57346",
+            "01-control-part-2.txt, false, 281",
+            "01-data.txt, false, 57345",
     })
     void testExecute(String resourceName, boolean part1, long value) throws URISyntaxException, IOException
     {
