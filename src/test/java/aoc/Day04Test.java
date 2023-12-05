@@ -17,8 +17,8 @@ class Day04Test
     @CsvSource({
             "04-control.txt, true, 13",
             "04-data.txt, true, 25340",
-//            "04-control.txt, false, 1924",
-//            "04-data.txt, false, 9020",
+            "04-control.txt, false, 30",
+            "04-data.txt, false, 9924412",
     })
     void testExecute(String resourceName, boolean part1, long value) throws URISyntaxException, IOException
     {
