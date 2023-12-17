@@ -3,10 +3,10 @@ package aoc;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Day 07: Camel Cards
@@ -15,10 +15,7 @@ import java.util.Map;
  */
 public class Day07
 {
-    private static final List<Character> CARD_CHARS =
-            List.of('A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2');
-
-    private List<Hand> hands = new ArrayList<>();
+    private final List<Hand> hands = new ArrayList<>();
 
     long execute(String fileName, boolean part1) throws URISyntaxException, IOException
     {
@@ -30,7 +27,7 @@ public class Day07
             final String[] parts = line.split(" ");
             final String cards = parts[0];
             final int bid = Integer.parseInt(parts[1]);
-            final Type type = determineType(cards);
+            final Type type = determineType(cards, part1);
             hands.add(new Hand(cards, type, bid));
         }
 
@@ -47,7 +44,15 @@ public class Day07
                 {
                     final Card card1 = Card.fromCharacter(cards1.charAt(i));
                     final Card card2 = Card.fromCharacter(cards2.charAt(i));
-                    value = card1.compareTo(card2);
+
+                    if (part1)
+                    {
+                        value = card1.compareTo(card2);
+                    } else
+                    {
+                        value = Integer.compare(card1.part2Rank, card2.part2Rank);
+                    }
+
                     i++;
                 }
             }
@@ -61,7 +66,7 @@ public class Day07
         final int numHands = hands.size();
         for (int i = 0; i < numHands; i++)
         {
-            int rank = numHands - i;
+            long rank = numHands - i;
             winnings += rank * hands.get(i).bid;
         }
 
@@ -72,9 +77,10 @@ public class Day07
      * Determine the type of hand by counting the unique instances of cards.
      *
      * @param cards The card hand as a String with 5 characters
+     * @param part1 {@code true} if this if part 1; {@code false} if this is part 2
      * @return The type of hand
      */
-    private Type determineType(String cards)
+    private Type determineType(String cards, boolean part1)
     {
         Map<Character, Integer> cardCounts = new HashMap<>();
 
@@ -82,6 +88,26 @@ public class Day07
         {
             final char card = cards.charAt(i);
             cardCounts.merge(card, 1, Integer::sum);
+        }
+
+        // For part 2, convert jokers to whatever card has the highest count
+        if (!part1)
+        {
+            final Integer jokers = cardCounts.remove('J');
+
+            if (jokers != null)
+            {
+                if (cardCounts.isEmpty())
+                {
+                    // If all the cards were jokers, put them back and move on since there is no other card to convert them to
+                    cardCounts.put('J', jokers);
+                } else
+                {
+                    // Convert the jokers to the card that has the highest count
+                    final Optional<Map.Entry<Character, Integer>> maxEntry = cardCounts.entrySet().stream().max(Map.Entry.comparingByValue());
+                    maxEntry.ifPresent(entry -> cardCounts.merge(entry.getKey(), jokers, Integer::sum));
+                }
+            }
         }
 
         final int uniqueCards = cardCounts.size();
@@ -106,33 +132,36 @@ public class Day07
 
     private enum Card
     {
-        A('A'),
-        K('K'),
-        Q('Q'),
-        J('J'),
-        T('T'),
-        NINE('9'),
-        EIGHT('8'),
-        SEVEN('7'),
-        SIX('6'),
-        FIVE('5'),
-        FOUR('4'),
-        THREE('3'),
-        TWO('2');
+        A('A', 0),
+        K('K', 1),
+        Q('Q', 2),
+        J('J', 12),
+        T('T', 3),
+        NINE('9', 4),
+        EIGHT('8', 5),
+        SEVEN('7', 6),
+        SIX('6', 7),
+        FIVE('5', 8),
+        FOUR('4', 9),
+        THREE('3', 10),
+        TWO('2', 11);
 
         private final char cardCharacter;
+        private final int part2Rank;
         private static final Map<Character, Card> map = new HashMap<>();
 
-        static {
-            for (Card card : Card.values())
+        static
+        {
+            for (Card card : values())
             {
                 map.put(card.cardCharacter, card);
             }
         }
 
-        Card(char cardCharacter)
+        Card(char cardCharacter, int part2Rank)
         {
             this.cardCharacter = cardCharacter;
+            this.part2Rank = part2Rank;
         }
 
         static Card fromCharacter(char cardCharacter)
